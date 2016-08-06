@@ -1,0 +1,11 @@
+# VS 2015 and VS Code
+.vscode/
+.vs/
+.vscode/**/*.*
+.vs/**/*.*
+
+# NodeJs modules
+node_modules
+
+# NodeJs Package Manager log
+npm-debug.log

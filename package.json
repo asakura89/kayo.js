@@ -1,0 +1,22 @@
+{
+    "name": "kayo.js",
+    "version": "1.0.0",
+    "description": "utility js lib",
+    "main": "main.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "browserify -s Kayo main.js > kayo.build.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/asakura89/kayo.js.git"
+    },
+    "keywords": [
+        "util"
+    ],
+    "author": "https://github.com/asakura89",
+    "license": "UNLICENSED",
+    "devDependencies": {
+        "browserify": "^13.1.0"
+    }
+}
