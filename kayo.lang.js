@@ -33,8 +33,8 @@
             return "";
 
         var code = arguments[0];
-        var entaString = self.Kayo.Lang[self.Kayo.GlobalConfig.Language.toLowerCase()][code];
-        if (!entaString)
+        var localizedString = self.Kayo.Lang[self.Kayo.GlobalConfig.Language.toLowerCase()][code];
+        if (!localizedString)
             return "";
 
         if (arguments.length > 1) {
@@ -42,9 +42,9 @@
             for (var i = 1; i < arguments.length; i++)
                 params[Number(i - 1)] = arguments[i];
 
-            return Kayo.VariableReplace(entaString, params);
+            return self.Kayo.VariableReplace(localizedString, params);
         }
 
-        return entaString;
-    }
+        return localizedString;
+    };
 })(window);

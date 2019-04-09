@@ -9,3 +9,22 @@ input[readonly].mandatory-empty {
     -webkit-animation: 0.7s 1 shake linear;
     animation: 0.7s 1 shake linear;
 }
+
+a.disabled,
+a.disabled:hover,
+a.disabled:focus {
+    color: #777;
+}
+
+a.disabled:hover,
+a.disabled:focus {
+    text-decoration: none;
+    cursor: not-allowed;
+    background-color: transparent;
+    background-image: none;
+    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+}
+
+.hidden {
+    display: none !important;
+}
