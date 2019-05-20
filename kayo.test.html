@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Test Suite</title>
+
+        <link rel="stylesheet" href="kayo.css" />
+        <style>
+            #results li.pass {
+                color: green;
+            }
+
+            #results li.fail {
+                color: red;
+            }
+        </style>
+    </head>
+    <body>
+        <ul id="results"></ul>
+
+        <script type="text/javascript" src="kayo.core.js"></script>
+        <script type="text/javascript" src="kayo.lang.js"></script>
+        <script type="text/javascript" src="kayo.array.js"></script>
+        <script type="text/javascript" src="kayo.number.js"></script>
+        <script type="text/javascript" src="kayo.aspnet.js"></script>
+        <script type="text/javascript" src="kayo.aspnet.webform.js"></script>
+        <script type="text/javascript">
+            window.onload = function () {
+                "use strict";
+
+                var results = document.getElementById("results");
+                function Test(name, fn) {
+                    results = document.getElementById("results");
+                    results = Assert(true, name).appendChild(document.createElement("ul"));
+                    fn();
+                }
+
+                function Assert(value, desc) {
+                    var li = document.createElement("li");
+                    li.className = value ? "pass" : "fail";
+                    li.appendChild(document.createTextNode(`${(value ? "Pass" : "Fail")}: ${desc}`));
+                    results.appendChild(li);
+                    if (!value) {
+                        li.parentNode.parentNode.className = "fail";
+                    }
+
+                    return li;
+                }
+
+                Test("kayo.core.test", function() {
+                    Assert((() => Kayo.GetType([]) === "Array")(), "Kayo.GetType Array");
+                    Assert((() => Kayo.GetType({}) === "Object")(), "Kayo.GetType Object");
+                    Assert((() => Kayo.GetType(document.createElement("div")) === "HTMLDivElement")(), "Kayo.GetType HTMLDivElement");
+
+                    Assert(function () {
+                        var a = {};
+                        var b = {
+                            setting1: "setting",
+                            setting2: true,
+                            setting3: 14
+                        };
+
+                        var c;
+
+                        var aeqb = a !== b;
+                        var aeqc = a !== c;
+                        var beqc = b !== c;
+
+                        c = Kayo.Extend(a, b);
+                        
+                        var aeqb2 = a === b;
+                        var aeqc2 = a === c;
+                        var beqc2 = b === c;
+
+                        var as1eqbs1 = a.setting1 !== b.setting1;
+                        var as1eqcs1 = a.setting1 === c.setting1;
+
+                        return (aeqb && aeqc && beqc) &&
+                            (aeqb2 && aeqc2 && beqc2) &&
+                            (as1eqbs1 && as1eqcs1);
+                    }(), "Kayo.Extend");
+                });
+            };
+        </script>
+    </body>
+</html>

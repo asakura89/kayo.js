@@ -2,12 +2,9 @@
     "use strict";
 
     self.Kayo = window.Kayo || {};
-    self.Kayo.GetType = function (obj) {
-        if (obj === undefined)
-            return "Undefined";
+    self.Kayo.GetType = obj => obj === undefined ? "Undefined" : Object.prototype.toString.call(obj).match(/^\[object\s+(.*?)\]$/)[1];
 
-        return Object.prototype.toString.call(obj).match(/^\[object\s+(.*?)\]$/)[1];
-    };
+    self.Kayo.AsArray = arrayLike => Array.prototype.slice.call(arrayLike);
 
     self.Kayo.Extend = function (target, source) {
         for (var prop in source) {
@@ -17,6 +14,7 @@
                 Object.defineProperty(target, prop, propInfo);
             }
         }
+
         return target;
     };
 
@@ -74,149 +72,165 @@
         };
     })();
 
-    self.Kayo.ValueOrDefault = function(el) {
-        var elval = el.value;
-        if (elval === undefined || elval === null || elval === "")
-            return self.Kayo.GetType(el) === "HTMLInputElement" &&
-                el.type === "number" ? "0" : "";
+    self.Kayo.ValueOrDefault = el =>
+        !el.value || el.value === null || el.value === "" ?
+            (self.Kayo.GetType(el) === "HTMLInputElement" &&
+                (el.type === "number" ? "0" : "")) :
+            el.value.trim();
 
-        return elval.trim();
-    };
+    self.Kayo.VariableReplace = (string2Replace, replacements) =>
+        replacements && replacements !== null ?
+            string2Replace
+                .replace(/(\$\w*)/g, $0 =>
+                    replacements[$0.replace(/\$/g, "")] === undefined ? $0 : replacements[$0.replace(/\$/g, "")]) :
+        string2Replace;
 
-    self.Kayo.VariableReplace = function (string2Replace, replacements) {
-        if (replacements !== undefined || replacements !== null)
-            return string2Replace
-                .replace(/(\$\w*)/g, function ($0) {
-                    return replacements[$0.replace(/\$/g, "")] === undefined ? $0 : replacements[$0.replace(/\$/g, "")];
-                });
-
-        return string2Replace;
-    };
-
-    self.Kayo.RedirectTo = function (url, delay) {
-        setTimeout(function () { window.location.href = url; }, delay ? delay : 1500);
-    };
+    self.Kayo.RedirectTo = function (url, delay) { setTimeout(function() { window.location.href = url; }, delay ? delay : 1500); };
 
     self.Kayo.StringFormat = function (message, param) {
         if (self.Kayo.GetType(param) !== "Array")
-            throw new self.Kayo.InvalidOperationException("param is not array.");
+            throw new self.Kayo.InvalidOperationException("param is not an Array.");
 
-        for (var i = 0; i < param.length; i++)
-            message = message.replace("{" + i + "}", param[i].toString());
+        for (var counter = 0; counter < param.length; counter++)
+            message = message.replace(`{${counter}}`, param[counter].toString());
 
         return message;
     };
 
     self.Kayo.PopulateDropdownList = function (select, dataList, nameSelector, valueSelector) {
         if (self.Kayo.GetType(dataList) !== "Array")
-            throw new self.Kayo.InvalidOperationException("dataList is not array.");
+            throw new self.Kayo.InvalidOperationException("dataList is not an Array.");
 
-        for (var i = 0; i < select.options.length; i++)
+        var counter = 0;
+        for (; counter < select.options.length; counter++)
             select.options.remove(0);
 
-        for (var i = 0; i < dataList.length; i++) {
+        for (counter = 0; counter < dataList.length; counter++) {
             var opt = document.createElement("option");
-            opt.text = nameSelector(dataList[i]);
-            opt.value = valueSelector(dataList[i]);
+            opt.text = nameSelector(dataList[counter]);
+            opt.value = valueSelector(dataList[counter]);
             select.options.add(opt);
         }
     };
 
-    $.fn.valOrDefault = function () {
-        var $this = $(this);
-        var $thisval = $this.val();
-        if ($thisval === undefined || $thisval === null || $thisval === "")
-            return self.Kayo.GetType($this[0]) === "HTMLInputElement" &&
-                $this.attr("type") === "number" ? "0" : "";
+    function DisableControl(selectors, isDisabled) {
+        if (self.Kayo.GetType(selectors) !== "Array")
+            throw new self.Kayo.InvalidOperationException("selectors of Disable must be an Array.");
 
-        return $thisval.trim();
-    };
+        selectors.forEach(selector => {
+            var elements = self.Kayo.AsArray(document.querySelectorAll(selector));
+            elements.forEach(el => {
+                el.removeAttribute("readonly");
+                el.removeAttribute("disabled");
 
-    $.fn.onOnce = function (a, b, c) {
-        $(this)
-            .off(a, b)
-            .on(a, b, c);
-    };
-
-    self.ValueOrDefault = function(el) {
-        var elval = el.value;
-        if (elval === undefined || elval === null || elval === "")
-            return self.Kayo.GetType(el) === "HTMLInputElement" &&
-                el.type === "number" ? "0" : "";
-
-        return elval.trim();
-    };
-
-    function DisableControl(idList, isDisabled) {
-        if (self.Kayo.GetType(idList) !== "Array")
-            throw new self.Kayo.InvalidOperationException("idList of Disable must be an Array of selector.");
-
-        idList.forEach(function (item) {
-            var element = $(item);
-            element.removeAttr("readonly").removeAttr("disabled");
-            // NOTE: firefox has bug which never readonlied input with type="number" so just disable all except input type="text"
-            // see this: https://support.mozilla.org/en-US/questions/1004206
-            element.prop(self.Kayo.GetType(element[0]) === "HTMLInputElement" && element.attr("type") === "text" ? "readonly" : "disabled", isDisabled);
+                switch (self.Kayo.GetType(el)) {
+                    case "HTMLAnchorElement":
+                        el.className = Array.prototype.join.call(self.Kayo.AsArray(el.classList).filter(clss => clss !== "disabled"), " ") + (isDisabled ? " disabled" : "");
+                        break;
+                    case "HTMLInputElement":
+                        // NOTE: firefox has bug which never readonlied input with type="number" so just disable all except input type="text"
+                        // see this: https://support.mozilla.org/en-US/questions/1004206
+                        if (isDisabled)
+                            el.setAttribute(el.getAttribute("type") === "text" ? "readonly" : "disabled", "");
+                        break;
+                    default:
+                        if (isDisabled)
+                            el.setAttribute("disabled", "");
+                        break;
+                }
+            });
         });
     }
 
-    self.Kayo.Disable = function (idList) { DisableControl(idList, true); };
-    self.Kayo.Enable = function (idList) { DisableControl(idList, false); };
+    self.Kayo.Disable = selectors => DisableControl(selectors, true);
+    self.Kayo.Enable = selectors => DisableControl(selectors, false);
 
-    self.Kayo.Clear = function (idList) {
-        if (self.Kayo.GetType(idList) !== "Array")
-            throw new self.Kayo.InvalidOperationException("idList of Clear must be an Array of selector.");
+    self.Kayo.Clear = function (selectors) {
+        if (self.Kayo.GetType(selectors) !== "Array")
+            throw new self.Kayo.InvalidOperationException("selectors of Clear must be an Array.");
 
-        idList.forEach(function (item) {
-            var element = $(item);
-            var elementType = self.Kayo.GetType(element[0]);
-            switch (elementType) {
-                case "HTMLInputElement":
-                    var elType = element.attr("type");
-                    if (elType === "checkbox")
-                        element.prop("checked", false);
-                    else
-                        element.val(elType === "number" ? 0 : "");
-                    break;
-                case "HTMLSelectElement":
-                    element.val(element[0].options[0].value);
-                    break;
-                default:
-                    element.val("");
-                    break;
-            }
+        selectors.forEach(selector => {
+            var elements = self.Kayo.AsArray(document.querySelectorAll(selector));
+            elements.forEach(el => {
+                switch (self.Kayo.GetType(el)) {
+                    case "HTMLInputElement":
+                        if (el.getAttribute("type") === "checkbox")
+                            el.removeAttribute("checked");
+                        else if (el.getAttribute("type") === "number")
+                            el.value = 0;
+                        else
+                            el.value = "";
+                        break;
+                    case "HTMLSelectElement":
+                        el.options.selectedIndex = 0;
+                        break;
+                    default:
+                        el.value = "";
+                        break;
+                }
+            });
         });
     };
 
-    self.Kayo.ValidateMandatory = function (idList, predicate) {
+    self.Kayo.Hide = function (selectors) {
+        if (self.Kayo.GetType(selectors) !== "Array")
+            throw new self.Kayo.InvalidOperationException("selectors of Hide must be an Array.");
+
+        selectors
+            .map(selector => self.Kayo.AsArray(document.querySelectorAll(selector)))
+            .reduce((ela, elb) => ela.concat(elb), [])
+            .forEach(el => el.className = el.className.replace(/(^|\b)hidden(\b|$)/gi, "").trim() + " hidden");
+    };
+
+    self.Kayo.Show = function (selectors) {
+        if (self.Kayo.GetType(selectors) !== "Array")
+            throw new self.Kayo.InvalidOperationException("selectors of Show must be an Array.");
+
+        selectors
+            .map(selector => self.Kayo.AsArray(document.querySelectorAll(selector)))
+            .reduce((ela, elb) => ela.concat(elb), [])
+            .forEach(el => el.className = el.className.replace(/(^|\b)hidden(\b|$)/gi, "").trim());
+    };
+
+    self.Kayo.ValidateMandatory = function (selectors, predicate) {
         if (predicate && self.Kayo.GetType(predicate) !== "Function")
             throw new self.Kayo.InvalidOperationException("predicate must be a function.");
 
-        if (self.Kayo.GetType(idList) !== "Array")
-            throw new self.Kayo.InvalidOperationException("idList of Clear must be an Array of selector.");
+        if (self.Kayo.GetType(selectors) !== "Array")
+            throw new self.Kayo.InvalidOperationException("selectors of Validate Mandatory must be an Array.");
 
-        var mandatoryEmptyList = [];
-        idList.forEach(function (id) {
-            var $elements = Array.from($(id));
-            $elements.forEach(function (el) {
-                var $el = $(el);
-                var elValue = $el.valOrDefault();
-                var isNotValid = predicate ? !predicate(elValue) : elValue === "" || elValue === "0";
+        var errElements = [];
+        selectors.forEach(function (selector) {
+            var elements = self.Kayo.AsArray(document.querySelectorAll(selector));
+            elements.forEach(function (el) {
+                var value = self.Kayo.ValueOrDefault(el);
+                var isNotValid = predicate ? !predicate(value, el) : value === "" || value === "0";
                 if (isNotValid) {
-                    $el.addClass("mandatory-empty");
-                    mandatoryEmptyList.push($el);
+                    el.className = el.className.replace(/(^|\b)mandatory-empty(\b|$)/gi, "").trim() + " mandatory-empty";
+                    errElements.push(el);
                 }
             });
         });
 
-        if (mandatoryEmptyList.length > 0) {
+        if (errElements.length > 0) {
             var mandatoryTimer = setTimeout(function () {
-                for (var i = 0; i < mandatoryEmptyList.length; i++)
-                    $(mandatoryEmptyList[i]).removeClass("mandatory-empty");
+                for (var counter = 0; counter < errElements.length; counter++) {
+                    var el = errElements[counter];
+                    el.className = el.className.replace(/(^|\b)mandatory-empty(\b|$)/gi, "").trim();
+                }
+
                 clearTimeout(mandatoryTimer);
             }, 10000);
         }
-        return mandatoryEmptyList.length === 0;
+
+        return errElements.length === 0;
+    };
+
+    /*
+    $.fn.onOnce = function (a, b, c) {
+        $(this)
+            .off(a, b)
+            .on(a, b, c);
     };
 
     $(document).ready(function () {
@@ -228,4 +242,6 @@
             }
         });
     });
+    */
+
 })(window.jQuery, window);

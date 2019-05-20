@@ -8,13 +8,16 @@
             Message: errorMessage
         };
 
-        var tmp = $(document.createElement("div"));
-        tmp.html(errorMessage);
+        var tmp = document.createElement("div");
+        tmp.innerHTML = errorMessage;
 
-        var comment = tmp.contents().filter(function () { return this.nodeType === 8; });
+        var comment = self.Kayo
+            .AsArray(tmp.children)
+            .filter(el => el.nodeType === 8);
+
         if (comment.length > 0) {
             result.IsASPError = true;
-            result.Message = comment.get(0).nodeValue;
+            result.Message = comment[0].nodeValue;
         }
 
         return result;
