@@ -7,5 +7,5 @@
         args.IsValid = false;
         window.Page_IsValid = false;
         return;
-    }
+    };
 })(window);
