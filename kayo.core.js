@@ -6,6 +6,8 @@
 
     self.Kayo.AsArray = arrayLike => Array.prototype.slice.call(arrayLike);
 
+    self.Kayo.ArrayJoin = (array, separator) => Array.prototype.join.call(array, separator);
+
     self.Kayo.Extend = function (target, source) {
         for (var prop in source) {
             var propInfo = Object.getOwnPropertyDescriptor(source, prop);
@@ -73,17 +75,17 @@
     })();
 
     self.Kayo.ValueOrDefault = el =>
-        !el.value || el.value === null || el.value === "" ?
+        (!el.value || el.value === null || el.value === "" ?
             (self.Kayo.GetType(el) === "HTMLInputElement" &&
                 (el.type === "number" ? "0" : "")) :
-            el.value.trim();
+            el.value.trim());
 
     self.Kayo.VariableReplace = (string2Replace, replacements) =>
-        replacements && replacements !== null ?
+        (replacements && replacements !== null ?
             string2Replace
                 .replace(/(\$\w*)/g, $0 =>
                     replacements[$0.replace(/\$/g, "")] === undefined ? $0 : replacements[$0.replace(/\$/g, "")]) :
-        string2Replace;
+        string2Replace);
 
     self.Kayo.RedirectTo = function (url, delay) { setTimeout(function() { window.location.href = url; }, delay ? delay : 1500); };
 
@@ -102,7 +104,8 @@
             throw new self.Kayo.InvalidOperationException("dataList is not an Array.");
 
         var counter = 0;
-        for (; counter < select.options.length; counter++)
+        var optsLength = select.options.length;
+        for (; counter < optsLength; counter++)
             select.options.remove(0);
 
         for (counter = 0; counter < dataList.length; counter++) {
@@ -125,7 +128,7 @@
 
                 switch (self.Kayo.GetType(el)) {
                     case "HTMLAnchorElement":
-                        el.className = Array.prototype.join.call(self.Kayo.AsArray(el.classList).filter(clss => clss !== "disabled"), " ") + (isDisabled ? " disabled" : "");
+                        el.className = self.Kayo.ArrayJoin(self.Kayo.AsArray(el.classList).filter(clss => clss !== "disabled"), " ") + (isDisabled ? " disabled" : "");
                         break;
                     case "HTMLInputElement":
                         // NOTE: firefox has bug which never readonlied input with type="number" so just disable all except input type="text"

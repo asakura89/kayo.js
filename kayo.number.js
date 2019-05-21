@@ -22,7 +22,7 @@
             38, // up arrow
             39, // right arrow
             40, // down arrow
-            self.Kayo.GlobalConfig.Language === "en-us" ? 190 : 188 // 190 is . (Dot) and 188 is , (Comma)
+            (self.Kayo.GlobalConfig.Language === "en-us" ? 190 : 188) // 190 is . (Dot) and 188 is , (Comma)
             /* 110, // Numpad .
             190 // Numpad , */
         ];
