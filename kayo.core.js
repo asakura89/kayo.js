@@ -1,16 +1,52 @@
-﻿!(function ($, self) {
+﻿!(function (self) {
     "use strict";
 
     self.Kayo = window.Kayo || {};
-    self.Kayo.GetType = obj => obj === undefined ? "Undefined" : Object.prototype.toString.call(obj).match(/^\[object\s+(.*?)\]$/)[1];
+    self.Kayo.GetType = obj =>
+        obj === undefined ?
+            "Undefined" :
+            Object
+                .prototype
+                .toString
+                .call(obj)
+                .match(/^\[object\s+(.*?)\]$/)[1];
 
-    self.Kayo.AsArray = arrayLike => Array.prototype.slice.call(arrayLike);
+    self.Kayo.AsArray = arrayLike =>
+        Array
+            .prototype
+            .slice
+            .call(arrayLike);
 
-    self.Kayo.ArrayJoin = (array, separator) => Array.prototype.join.call(array, separator);
+    self.Kayo.ArrayJoin = (array, separator) =>
+        Array
+            .prototype
+            .join
+            .call(array, separator);
 
     self.Kayo.Extend = function (target, source) {
         for (var prop in source) {
             var propInfo = Object.getOwnPropertyDescriptor(source, prop);
+            if (propInfo) {
+                delete target[prop];
+                Object.defineProperty(target, prop, propInfo);
+            }
+        }
+
+        return target;
+    };
+
+    self.Kayo.Merge = function (sourceA, sourceB) {
+        var target = {};
+        for (var prop in sourceA) {
+            var propInfo = Object.getOwnPropertyDescriptor(sourceA, prop);
+            if (propInfo) {
+                delete target[prop];
+                Object.defineProperty(target, prop, propInfo);
+            }
+        }
+
+        for (var prop in sourceB) {
+            var propInfo = Object.getOwnPropertyDescriptor(sourceB, prop);
             if (propInfo) {
                 delete target[prop];
                 Object.defineProperty(target, prop, propInfo);
@@ -29,50 +65,47 @@
         });
     };
 
-    self.Kayo.ViewData = (function () {
-        var tmp = {};
+    self.Kayo.ViewData = function () { this.tmp = {};};
+    self.Kayo.ViewData.prototype = {
+        Get: function (key) {
+            if (this.tmp.hasOwnProperty(key))
+                return this.tmp[key];
+            return undefined;
+        },
+        Add: function (key, value) {
+            this.tmp[key] = value;
+        },
+        Remove: function (key) {
+            delete this.tmp[key];
+        },
+        Clear: function () {
+            this.tmp = {};
+        },
+        GetKeys: function () {
+            var keys = [];
+            for (var key in this.tmp)
+                if (this.tmp.hasOwnProperty(key))
+                    keys.push(key);
+            return keys;
+        }
+    };
 
-        return {
-            Get: function (key) {
-                if (tmp.hasOwnProperty(key))
-                    return tmp[key];
-                return undefined;
-            },
-            Add: function (key, value) {
-                tmp[key] = value;
-            },
-            Remove: function (key) {
-                delete tmp[key];
-            },
-            Clear: function () {
-                tmp = {};
-            },
-            GetKeys: function () {
-                var keys = [];
-                for (var key in tmp)
-                    if (tmp.hasOwnProperty(key))
-                        keys.push(key);
-                return keys;
-            }
-        };
-    })();
+    self.Kayo.Hook = function() { this.tmp = new ViewData(); }
+    self.Kayo.Hook.prototype = {
+        Run: function (key, params) {
+            var hook = this.tmp.Get(key);
+            if (!hook)
+                throw new self.Kayo.InvalidOperationException("There's no Hook with name '" + key + "'");
 
-    self.Kayo.Hook = (function () {
-        var vd = Object.create(self.Kayo.ViewData);
-        return {
-            Run: function (key, params) {
-                var hook = vd.Get(key);
-                if (!hook)
-                    throw new self.Kayo.InvalidOperationException("There's no Hook with name '" + key + "'");
-                return hook.apply(self, params);
-            },
-            Add: function (key, value) {
-                if (self.Kayo.GetType(value) !== "Function")
-                    throw new self.Kayo.InvalidOperationException("Not a function.");
-                vd.Add(key, value);
-            }
-        };
-    })();
+            return hook.apply(self, params);
+        },
+        Add: function (key, value) {
+            if (self.Kayo.GetType(value) !== "Function")
+                throw new self.Kayo.InvalidOperationException("Not a function.");
+
+            this.tmp.Add(key, value);
+        }
+    };
 
     self.Kayo.ValueOrDefault = el =>
         (!el.value || el.value === null || el.value === "" ?
@@ -87,7 +120,14 @@
                     replacements[$0.replace(/\$/g, "")] === undefined ? $0 : replacements[$0.replace(/\$/g, "")]) :
         string2Replace);
 
-    self.Kayo.RedirectTo = function (url, delay) { setTimeout(function() { window.location.href = url; }, delay ? delay : 1500); };
+    self.Kayo.RedirectTo = function (url, delay) {
+        setTimeout(
+            function() {
+                window.location.href = url;
+            },
+            delay ? delay : 1500
+        );
+    };
 
     self.Kayo.StringFormat = function (message, param) {
         if (self.Kayo.GetType(param) !== "Array")
@@ -247,4 +287,4 @@
     });
     */
 
-})(window.jQuery, window);
+})(window);

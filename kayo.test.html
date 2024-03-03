@@ -30,31 +30,39 @@
             window.onload = function () {
                 "use strict";
 
-                var results = document.getElementById("results");
                 function Test(name, fn) {
-                    results = document.getElementById("results");
-                    results = Assert(true, name).appendChild(document.createElement("ul"));
-                    fn();
+                    var container = document.getElementById("results");
+                    var li = document.createElement("li");
+                    var asserts = document.createElement("ul");
+                    li.appendChild(document.createTextNode(name));
+                    li.appendChild(asserts);
+                    container.appendChild(li);
+
+                    var allResults = true;
+                    var result = fn();
+                    if (!result) {
+                        allResults = allResults && result;
+                        li.className = "fail";
+                    }
+
+                    li.childNodes[0].textContent = `${(allResults ? "Pass" : "Fail")}: ${name}`;
+                    li.className = allResults ? "pass" : "fail";
                 }
 
                 function Assert(value, desc) {
                     var li = document.createElement("li");
                     li.className = value ? "pass" : "fail";
                     li.appendChild(document.createTextNode(`${(value ? "Pass" : "Fail")}: ${desc}`));
-                    results.appendChild(li);
-                    if (!value) {
-                        li.parentNode.parentNode.className = "fail";
-                    }
-
-                    return li;
+                    document.querySelector("#results li:last-child ul").appendChild(li);
+                    return value;
                 }
 
                 Test("kayo.core.test", function() {
-                    Assert((() => Kayo.GetType([]) === "Array")(), "Kayo.GetType Array");
-                    Assert((() => Kayo.GetType({}) === "Object")(), "Kayo.GetType Object");
-                    Assert((() => Kayo.GetType(document.createElement("div")) === "HTMLDivElement")(), "Kayo.GetType HTMLDivElement");
+                    var result1 = Assert((() => Kayo.GetType([]) === "Array")(), "Kayo.GetType Array");
+                    var result2 = Assert((() => Kayo.GetType({}) === "Object")(), "Kayo.GetType Object");
+                    var result3 = Assert((() => Kayo.GetType(document.createElement("div")) === "HTMLDivElement")(), "Kayo.GetType HTMLDivElement");
 
-                    Assert(function () {
+                    var result4 = Assert(function () {
                         var a = {};
                         var b = {
                             setting1: "setting",
@@ -70,17 +78,85 @@
 
                         c = Kayo.Extend(a, b);
 
-                        var aeqb2 = a === b;
+                        var aeqb2 = a !== b;
                         var aeqc2 = a === c;
-                        var beqc2 = b === c;
+                        var beqc2 = b !== c;
 
-                        var as1eqbs1 = a.setting1 !== b.setting1;
+                        var as1eqbs1 = a.setting1 === b.setting1;
                         var as1eqcs1 = a.setting1 === c.setting1;
 
                         return (aeqb && aeqc && beqc) &&
                             (aeqb2 && aeqc2 && beqc2) &&
                             (as1eqbs1 && as1eqcs1);
+
                     }(), "Kayo.Extend");
+
+                    var result5 = Assert(function () {
+                        var a = {};
+                        var b = {
+                            setting1: "setting",
+                            setting2: true,
+                            setting3: 14
+                        };
+
+                        var c;
+
+                        var aeqb = a !== b;
+                        var aeqc = a !== c;
+                        var beqc = b !== c;
+
+                        c = Kayo.Merge(a, b);
+
+                        var aeqb2 = a !== b;
+                        var aeqc2 = a !== c;
+                        var beqc2 = b !== c;
+
+                        var as1eqbs1 = a.setting1 !== b.setting1;
+                        var as1eqcs1 = a.setting1 !== c.setting1;
+
+                        return (aeqb && aeqc && beqc) &&
+                            (aeqb2 && aeqc2 && beqc2) &&
+                            (as1eqbs1 && as1eqcs1);
+
+                    }(), "Kayo.Merge");
+
+                    var result6 = Assert(function () {
+                        var a = {};
+                        var b = {
+                            setting1: "setting",
+                            setting2: true,
+                            setting3: 14
+                        };
+
+                        var c;
+
+                        var tmpStorage1 = new Kayo.ViewData();
+                        tmpStorage1.Add("a", a);
+                        tmpStorage1.Add("b", b);
+                        tmpStorage1.Add("c", c);
+
+                        var aeqsta = a === tmpStorage1.Get("a");
+                        var beqstb = b === tmpStorage1.Get("b");
+                        var ceqstc = c === tmpStorage1.Get("c");
+
+                        var bs1eqstbs1 = b.setting1 === tmpStorage1.Get("b").setting1;
+
+                        return (aeqsta && beqstb && ceqstc) &&
+                            bs1eqstbs1;
+
+                    }(), "Kayo.ViewData");
+
+                    return result1 && result2 &&
+                        result3 && result4 &&
+                        result5 && result6;
+
+                    // End kayo.core.test
+                });
+
+                Test("dummy", function () {
+                    Assert(function() {return false;}(), "dummy cases");
+                    Assert(function() {return true;}(), "dummy cases 2");
+                    return false;
                 });
             };
         </script>
