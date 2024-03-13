@@ -56,6 +56,24 @@
         return target;
     };
 
+    self.Kayo.ArgumentNullException = function (message) {
+        var ex = Error.call(self);
+        return self.Kayo.Extend(ex, {
+            name: "ArgumentNullException",
+            message: message ? "ArgumentNullException: " + message : "",
+            stack: ex.stack
+        });
+    };
+
+    self.Kayo.ArgumentOutOfRangeException = function (message) {
+        var ex = Error.call(self);
+        return self.Kayo.Extend(ex, {
+            name: "ArgumentOutOfRangeException",
+            message: message ? "ArgumentOutOfRangeException: " + message : "",
+            stack: ex.stack
+        });
+    };
+
     self.Kayo.InvalidOperationException = function (message) {
         var ex = Error.call(self);
         return self.Kayo.Extend(ex, {
@@ -65,7 +83,7 @@
         });
     };
 
-    self.Kayo.ViewData = function () { this.tmp = {};};
+    self.Kayo.ViewData = function () { this.tmp = {}; };
     self.Kayo.ViewData.prototype = {
         Get: function (key) {
             if (this.tmp.hasOwnProperty(key))
@@ -90,7 +108,7 @@
         }
     };
 
-    self.Kayo.Hook = function() { this.tmp = new ViewData(); }
+    self.Kayo.Hook = function() { this.tmp = new ViewData(); };
     self.Kayo.Hook.prototype = {
         Run: function (key, params) {
             var hook = this.tmp.Get(key);

@@ -153,6 +153,12 @@
                     // End kayo.core.test
                 });
 
+                Test("kayo.eventemitter.test", function () {
+                    Assert(function () {return true;}(), "");
+
+                    // End kayo.eventemitter.test
+                });
+
                 Test("dummy", function () {
                     Assert(function() {return false;}(), "dummy cases");
                     Assert(function() {return true;}(), "dummy cases 2");
